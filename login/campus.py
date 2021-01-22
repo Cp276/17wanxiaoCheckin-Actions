@@ -40,7 +40,7 @@ class CampusCard:
             'login': False,
             'serverPublicKey': '',
             'deviceId': str(random.randint(999999999999999, 9999999999999999)),
-            'wanxiaoVersion': 10531102,
+            'wanxiaoVersion': 10462101,
             'rsaKey': {
                 'private': rsa_keys[1],
                 'public': rsa_keys[0]
@@ -56,7 +56,7 @@ class CampusCard:
             resp = requests.post(
                 'https://app.17wanxiao.com/campus/cam_iface46/exchangeSecretkey.action',
                 headers={
-                    'User-Agent': 'NCP/5.3.1 (iPhone; iOS 13.5; Scale/2.00)',
+                    'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 5.1.1; HUAWEI MLA-AL10 Build/HUAWEIMLA-AL10)',
                 },
                 json={
                     'key': self.user_info['rsaKey']['public']
@@ -91,13 +91,13 @@ class CampusCard:
             'password': password_list,
             'qudao': 'guanwang',
             'requestMethod': 'cam_iface46/loginnew.action',
-            'shebeixinghao': 'iPhone12',
-            'systemType': 'iOS',
-            'telephoneInfo': '13.5',
-            'telephoneModel': 'iPhone',
+            'shebeixinghao': 'MLA-AL10',
+            'systemType': 'android',
+            'telephoneInfo': '5.1.1',
+            'telephoneModel': 'HUAWEI MLA-AL10',
             'type': '1',
             'userName': self.phone,
-            'wanxiaoVersion': 10531102,
+            'wanxiaoVersion': 10462101,
             'yunyingshang': '07'
         }
         upload_args = {
@@ -112,12 +112,23 @@ class CampusCard:
                 verify=False,
                 timeout=30,
             ).json()
+            """
+            {'result_': True, 'data': '........', 'message_': '登录成功', 'code_': '0'}
+            {'result_': False, 'message_': '该手机号未注册完美校园', 'code_': '4'}
+            {'result_': False, 'message_': '您正在新设备上使用完美校园，请使用验证码进行验证登录', 'code_': '5'}
+            {'result_': False, 'message_': '密码错误,您还有5次机会!', 'code_': '5'}
+            """
             if resp['result_']:
+                # logging.info(resp)
                 logging.info(f'{self.phone[:4]}：{resp["message_"]}')
                 self.user_info['login'] = True
                 self.user_info['exchangeFlag'] = False
+                self.user_info['login_msg'] = resp
             else:
-                logging.info(f'{self.phone[:4]}：{resp["message_"]}')
+                # logging.warning(resp)
+                logging.warning(f'{self.phone[:4]}：{resp["message_"]}')
+                self.user_info['login_msg'] = resp
             return resp['result_']
         except Exception as e:
+            self.user_info['login_msg'] = {"message_": e}
             logging.warning(e)
